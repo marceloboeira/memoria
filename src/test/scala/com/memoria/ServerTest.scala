@@ -3,10 +3,8 @@ package com.memoria
 import java.time.Instant
 
 import com.twitter.finagle.http.Status
-import com.twitter.util.Throw
 import io.finch.Error.NotParsed
 import io.finch.Input
-import io.finch.items.BodyItem
 import org.scalatest._
 import com.memoria.Uploads
 
@@ -19,6 +17,7 @@ trait UploadsCleaner extends BeforeAndAfterEach { this: Suite =>
 
 class ServerTest extends FunSpec with Matchers with UploadsCleaner {
   import com.memoria.Server.postUpload
+  import com.memoria.Server.getStatistics
 
   def uploadInput(count: Int, secondsAgo: Int): Input = {
     Input.post("/upload")
@@ -29,6 +28,10 @@ class ServerTest extends FunSpec with Matchers with UploadsCleaner {
   def invalidUploadInput: Input = {
     Input.post("/upload")
       .withBody("{ \"invalid\": 1, \"timestamp\": 10000 }")
+  }
+
+  def populateUploadsWith(count: Int, secondsAgo: Int): Unit = {
+    Uploads.add(Upload(count, Instant.now.getEpochSecond - secondsAgo))
   }
 
   describe("POST /upload") {
@@ -65,6 +68,40 @@ class ServerTest extends FunSpec with Matchers with UploadsCleaner {
     describe("when the parameters are not valid") {
       it("returns with status 400 - Bad Request") {
         a[NotParsed] shouldBe thrownBy(postUpload(invalidUploadInput).awaitValueUnsafe())
+      }
+    }
+  }
+
+  describe ("GET /statistics") {
+    describe("when there is no data") {
+      it("returns 200 - Success") {
+        getStatistics(Input.get("/statistics"))
+          .awaitOutputUnsafe()
+          .map(_.status) shouldBe Some(Status.Ok)
+      }
+
+      it("returns 0 for all the stats") {
+        getStatistics(Input.get("/statistics"))
+          .awaitValueUnsafe() shouldBe Some(Statistics(0,0,0,0,0))
+      }
+    }
+
+    describe("when there is data") {
+      it("returns 200 - Success") {
+        populateUploadsWith(5, 10)
+
+        getStatistics(Input.get("/statistics"))
+          .awaitOutputUnsafe()
+          .map(_.status) shouldBe Some(Status.Ok)
+      }
+
+      it("returns the expected value for the stats") {
+        populateUploadsWith(1, 12)
+        populateUploadsWith(10, 13)
+        populateUploadsWith(8, 14)
+
+        getStatistics(Input.get("/statistics"))
+          .awaitValueUnsafe() shouldBe Some(Statistics(3,19,1,10,6.0))
       }
     }
   }
