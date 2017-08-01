@@ -13,10 +13,6 @@ import io.circe.generic.auto._
 case class Upload(count: Int, timestamp: Long)
 
 object Server extends App {
-  def root: Endpoint[String] = get(*) {
-    Ok("Memoria")
-  }
-
   def postUpload: Endpoint[Unit] = post("upload" :: jsonBody[Upload]) { upload: Upload =>
     Option(ageOf(upload.timestamp)).filter(_ <= 60) match {
       case Some(x) => Output.unit(Status.Created)
@@ -27,5 +23,5 @@ object Server extends App {
   private def ageOf(timestamp : Long): Long = { val a = now - timestamp; a }
   private def now: Long = { Instant.now.getEpochSecond }
 
-  Await.ready(Http.server.serve(":9000", (root :+: postUpload).toService))
+  Await.ready(Http.server.serve(":9000", (postUpload).toService))
 }

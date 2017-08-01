@@ -10,7 +10,6 @@ import io.finch.items.BodyItem
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FunSpec, Matchers}
 
 class ServerTest extends FunSpec with Matchers with BeforeAndAfterEach {
-  import com.memoria.Server.root
   import com.memoria.Server.postUpload
 
   def uploadInput(count : Int, secondsAgo : Int): Input = {
@@ -22,19 +21,6 @@ class ServerTest extends FunSpec with Matchers with BeforeAndAfterEach {
   def invalidUploadInput: Input = {
     Input.post("/upload")
       .withBody("{ \"invalid\": 1, \"timestamp\": 10000 }")
-  }
-
-  describe ("GET /") {
-    it("returns 200 - Success") {
-      root(Input.get("/"))
-        .awaitOutputUnsafe()
-        .map(_.status) shouldBe Some(Status.Ok)
-    }
-
-    it("returns 'Memoria' in the body") {
-      root(Input.get("/"))
-        .awaitValueUnsafe() shouldBe Some("Memoria")
-    }
   }
 
   describe("POST /upload") {
