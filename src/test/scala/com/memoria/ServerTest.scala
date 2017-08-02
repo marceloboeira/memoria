@@ -9,8 +9,8 @@ import org.scalatest._
 
 trait UploadsCleaner extends BeforeAndAfterEach { this: Suite =>
   override def beforeEach {
-    Uploads.queue.clear
-    Uploads.destroyAll
+    Cache.queue.clear
+    Cache.destroyAll
     super.beforeEach
   }
 }
@@ -31,7 +31,7 @@ class ServerTest extends FunSpec with Matchers with UploadsCleaner {
   }
 
   def populateUploadsWith(count: Int, secondsAgo: Int): Unit = {
-    Uploads.add(Upload(count, Instant.now.getEpochSecond - secondsAgo))
+    Cache.add(Upload(count, Instant.now.getEpochSecond - secondsAgo))
   }
 
   describe("POST /upload") {
@@ -46,7 +46,7 @@ class ServerTest extends FunSpec with Matchers with UploadsCleaner {
         it("enques the creation of the upload") {
           postUpload(uploadInput(1, 5)).awaitOutputUnsafe()
 
-          Uploads.queue.size shouldBe 1
+          Cache.queue.size shouldBe 1
         }
       }
 
@@ -60,7 +60,7 @@ class ServerTest extends FunSpec with Matchers with UploadsCleaner {
         it("does not enqueue a new entry") {
           postUpload(uploadInput(1, 65)).awaitOutputUnsafe()
 
-          Uploads.queue.size shouldBe 0
+          Cache.queue.size shouldBe 0
         }
       }
     }
@@ -75,7 +75,7 @@ class ServerTest extends FunSpec with Matchers with UploadsCleaner {
   describe ("GET /statistics") {
     describe("when there is no data") {
       it("returns 200 - Success") {
-        Uploads.refreshStatistics
+        Cache.refreshStatistics
 
         getStatistics(Input.get("/statistics"))
           .awaitOutputUnsafe()
@@ -83,7 +83,7 @@ class ServerTest extends FunSpec with Matchers with UploadsCleaner {
       }
 
       it("returns 0 for all the stats") {
-        Uploads.refreshStatistics
+        Cache.refreshStatistics
 
         getStatistics(Input.get("/statistics"))
           .awaitValueUnsafe() shouldBe Some(UploadStatistics(0,0,0,0,0))
@@ -104,7 +104,7 @@ class ServerTest extends FunSpec with Matchers with UploadsCleaner {
         populateUploadsWith(10, 13)
         populateUploadsWith(8, 14)
 
-        Uploads.refreshStatistics
+        Cache.refreshStatistics
 
         getStatistics(Input.get("/statistics")).awaitValueUnsafe() shouldBe Some(UploadStatistics(3,19,1,10,6.0))
       }

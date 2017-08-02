@@ -1,12 +1,12 @@
 package com.memoria.workers
 
-import com.memoria.Uploads
+import com.memoria.Cache
 
 class CacheWorker(interval: Long) extends Runnable {
   def run() {
     while (true) {
-      Uploads.removeOldEntries
-      Uploads.refreshStatistics
+      Cache.removeOldEntries
+      Cache.refreshStatistics
       Thread.sleep(interval)
     }
   }

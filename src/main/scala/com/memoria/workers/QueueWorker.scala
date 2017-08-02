@@ -2,12 +2,12 @@ package com.memoria.workers
 
 import java.util.concurrent.BlockingQueue
 
-import com.memoria.{Upload, Uploads}
+import com.memoria.{Upload, Cache}
 
 class QueueWorker(queue: BlockingQueue[Upload]) extends Runnable {
   def run() {
     while (true) {
-      Uploads.add(queue.take)
+      Cache.add(queue.take)
     }
   }
 }

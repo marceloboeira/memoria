@@ -18,7 +18,7 @@ import scala.collection.mutable.ArrayBuffer
 case class Upload(count: Int, timestamp: Long)
 case class UploadStatistics(count: Int, sum: Int, min: Int, max: Int, avg: Double)
 
-object Uploads {
+object Cache {
   val queue = new LinkedBlockingQueue[Upload]
   private[this] val memory: ArrayBuffer[Upload] = ArrayBuffer.empty[Upload]
   var uploadStatistics: UploadStatistics = UploadStatistics(0,0,0,0,0)
@@ -42,7 +42,7 @@ object Server extends App {
   def postUpload: Endpoint[Unit] = post("upload" :: jsonBody[Upload]) { upload: Upload =>
     Option(ageOf(upload.timestamp)).filter(_ <= 60) match {
       case Some(x) => {
-        Uploads.queue.put(upload)
+        Cache.queue.put(upload)
         Output.unit(Status.Created)
       }
       case None => {
@@ -52,14 +52,14 @@ object Server extends App {
   }
 
   def getStatistics: Endpoint[UploadStatistics] = get("statistics") {
-    Ok(Uploads.uploadStatistics)
+    Ok(Cache.uploadStatistics)
   }
 
   private def ageOf(timestamp : Long): Long = { now - timestamp }
   private def now: Long = { Instant.now.getEpochSecond }
 
   def startWorkers = {
-    pool.submit(new QueueWorker(Uploads.queue))
+    pool.submit(new QueueWorker(Cache.queue))
     pool.submit(new CacheWorker(500))
   }
 
