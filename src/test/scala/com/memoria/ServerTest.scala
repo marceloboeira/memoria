@@ -4,9 +4,10 @@ import java.time.Instant
 
 import com.twitter.finagle.http.Status
 import io.finch.Error.NotParsed
-import io.finch.Input
+import io.finch.{Endpoint, Input}
 import org.scalatest._
 import com.memoria.Uploads
+import com.twitter.util.Future
 
 trait UploadsCleaner extends BeforeAndAfterEach { this: Suite =>
   override def beforeEach() {
@@ -75,14 +76,18 @@ class ServerTest extends FunSpec with Matchers with UploadsCleaner {
   describe ("GET /statistics") {
     describe("when there is no data") {
       it("returns 200 - Success") {
+        Uploads.refreshStatistics
+
         getStatistics(Input.get("/statistics"))
           .awaitOutputUnsafe()
           .map(_.status) shouldBe Some(Status.Ok)
       }
 
       it("returns 0 for all the stats") {
+        Uploads.refreshStatistics
+
         getStatistics(Input.get("/statistics"))
-          .awaitValueUnsafe() shouldBe Some(Statistics(0,0,0,0,0))
+          .awaitValueUnsafe() shouldBe Some(UploadStatistics(0,0,0,0,0))
       }
     }
 
@@ -100,8 +105,9 @@ class ServerTest extends FunSpec with Matchers with UploadsCleaner {
         populateUploadsWith(10, 13)
         populateUploadsWith(8, 14)
 
-        getStatistics(Input.get("/statistics"))
-          .awaitValueUnsafe() shouldBe Some(Statistics(3,19,1,10,6.0))
+        Uploads.refreshStatistics
+
+        getStatistics(Input.get("/statistics")).awaitValueUnsafe() shouldBe Some(UploadStatistics(3,19,1,10,6.0))
       }
     }
   }
