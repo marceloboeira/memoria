@@ -69,3 +69,35 @@ where:
 * Do not use any database, including only-memory databases
 * The endpoints have to execute in constant time and memory, O(1)
 * API has to be fully tested including unit tests and end to end tests
+
+
+## Showtime
+
+Since there are no external dependencies, you can simply install scala/sbt (with Java 8).
+
+### Server
+
+Having scala/sbt istalled, just run `make start` to start the application.
+
+If everything went well, the server will start at port 9000, [http://localhost:9000/](http://localhost:9000/).
+
+### Tests
+
+To run the test suite just use `make test`.
+
+### Benchmark
+
+With [Apache Benchmark](http://httpd.apache.org/docs/2.0/programs/ab.html) installed, you can easily check the performance of the endpoints.
+
+Remember to have the server running and to consider the warm up of the JVM.
+
+* To benchmark the POST /upload use: `make benchmark_upload`
+* To benchmark the GET /statistics use: `make benchmark_statistics`
+
+The default configuration for the benchmark is 1000 requests with 50 concurrent and no Keep-Alive.
+
+That will trigger apache benchmark on the default port, posting the file present on `benchmark/post.json`.
+
+Note: It is important that you update the timestamp to the current time-window.
+
+You can generate the epoch timestamp for now by running `make epoch_now`.
