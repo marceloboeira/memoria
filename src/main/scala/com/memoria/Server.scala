@@ -1,67 +1,85 @@
 package com.memoria
 
 import java.time.Instant
-
-import scala.collection.mutable.ArrayBuffer
+import java.util.concurrent.{Executors, BlockingQueue, LinkedBlockingQueue}
 import util.Try
+
 import com.twitter.util.Await
 import com.twitter.finagle.Http
 import com.twitter.finagle.http.Status
+
 import io.finch._
 import io.finch.circe._
 import io.circe.generic.auto._
+
+import scala.collection.mutable.ArrayBuffer
 
 case class Upload(count: Int, timestamp: Long)
 case class UploadStatistics(count: Int, sum: Int, min: Int, max: Int, avg: Double)
 
 object Uploads {
+  val queue = new LinkedBlockingQueue[Upload]
   private[this] val memory: ArrayBuffer[Upload] = ArrayBuffer.empty[Upload]
-  private[this] var uploadStatistics: UploadStatistics = UploadStatistics(0,0,0,0,0)
+  var uploadStatistics: UploadStatistics = UploadStatistics(0,0,0,0,0)
 
-  def add(item: Upload): Unit = synchronized { memory += item }
-  def destroyAll: Unit = synchronized { memory.clear() }
-  def max: Int = synchronized { Try(memory.map(_.count).max).toOption.getOrElse(0) }
-  def min: Int = synchronized { Try(memory.map(_.count).min).toOption.getOrElse(0) }
-  def count: Int = synchronized { memory.length }
-  def sum: Int = synchronized { memory.map(_.count).sum }
-  def average: Double = synchronized { Try((sum / count).toDouble).toOption.getOrElse(0.0) }
-  def refreshStatistics: Unit = synchronized { uploadStatistics = UploadStatistics(count, sum, min, max, average) }
-  def statistics: UploadStatistics = synchronized { uploadStatistics }
+  def add(item: Upload): Unit = { memory += item }
+  def destroyAll: Unit = synchronized { memory.clear }
+  def max: Int = { Try(memory.map(_.count).max).toOption.getOrElse(0) }
+  def min: Int = { Try(memory.map(_.count).min).toOption.getOrElse(0) }
+  def count: Int = { memory.length }
+  def sum: Int = { memory.map(_.count).sum }
+  def average: Double = { Try((sum / count).toDouble).toOption.getOrElse(0.0) }
+  def refreshStatistics = { uploadStatistics = UploadStatistics(count, sum, min, max, average) }
   def maxAge: Long = { Instant.now.getEpochSecond - 60 }
   def removeOldEntries: Unit = synchronized {  memory --= memory.filter(_.timestamp < maxAge) }
 }
 
+class QueueWorker(queue: BlockingQueue[Upload]) extends Runnable {
+  def run() {
+    while (true) {
+      Uploads.add(queue.take)
+    }
+  }
+}
+
+class CacheWorker(interval: Long) extends Runnable {
+  def run() {
+    while (true) {
+      Uploads.removeOldEntries
+      Uploads.refreshStatistics
+      Thread.sleep(interval)
+    }
+  }
+}
+
 object Server extends App {
+  val cores = 2
+  val pool = Executors.newFixedThreadPool(cores)
+
   def postUpload: Endpoint[Unit] = post("upload" :: jsonBody[Upload]) { upload: Upload =>
     Option(ageOf(upload.timestamp)).filter(_ <= 60) match {
-      case Some(x) => Uploads.add(upload); Output.unit(Status.Created)
-      case None => Output.unit(Status.NoContent)
+      case Some(x) => {
+        Uploads.queue.put(upload)
+        Output.unit(Status.Created)
+      }
+      case None => {
+        Output.unit(Status.NoContent)
+      }
     }
   }
 
   def getStatistics: Endpoint[UploadStatistics] = get("statistics") {
-    Ok(Uploads.statistics)
-  }
-
-  def startWorker: Unit = {
-    val worker = new Thread(
-      new Runnable {
-        def run: Unit = {
-          while (true) {
-            Uploads.removeOldEntries
-            Uploads.refreshStatistics
-            Thread.sleep(1000)
-          }
-        }
-      }
-    )
-
-    worker.start
+    Ok(Uploads.uploadStatistics)
   }
 
   private def ageOf(timestamp : Long): Long = { now - timestamp }
   private def now: Long = { Instant.now.getEpochSecond }
 
-  startWorker
+  def startWorkers = {
+    pool.submit(new QueueWorker(Uploads.queue))
+    pool.submit(new CacheWorker(500))
+  }
+
+  startWorkers
   Await.ready(Http.server.serve(":9000", (postUpload :+: getStatistics).toService))
 }

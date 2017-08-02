@@ -4,15 +4,14 @@ import java.time.Instant
 
 import com.twitter.finagle.http.Status
 import io.finch.Error.NotParsed
-import io.finch.{Endpoint, Input}
+import io.finch.Input
 import org.scalatest._
-import com.memoria.Uploads
-import com.twitter.util.Future
 
 trait UploadsCleaner extends BeforeAndAfterEach { this: Suite =>
-  override def beforeEach() {
+  override def beforeEach {
+    Uploads.queue.clear
     Uploads.destroyAll
-    super.beforeEach()
+    super.beforeEach
   }
 }
 
@@ -44,10 +43,10 @@ class ServerTest extends FunSpec with Matchers with UploadsCleaner {
             .map(_.status) shouldBe Some(Status.Created)
         }
 
-        it("creates the entry on memory") {
+        it("enques the creation of the upload") {
           postUpload(uploadInput(1, 5)).awaitOutputUnsafe()
 
-          Uploads.count shouldBe 1
+          Uploads.queue.size shouldBe 1
         }
       }
 
@@ -58,10 +57,10 @@ class ServerTest extends FunSpec with Matchers with UploadsCleaner {
             .map(_.status) shouldBe Some(Status.NoContent)
         }
 
-        it("does not create the entry on memory") {
+        it("does not enqueue a new entry") {
           postUpload(uploadInput(1, 65)).awaitOutputUnsafe()
 
-          Uploads.count shouldBe 0
+          Uploads.queue.size shouldBe 0
         }
       }
     }
