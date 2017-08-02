@@ -8,7 +8,7 @@ import io.finch.Error.NotParsed
 import io.finch.Input
 import org.scalatest._
 
-class ServerTest extends FunSpec with Matchers with CacheCleaner with QueueCleaner {
+class ApiSpec extends FunSpec with Matchers with CacheCleaner with QueueCleaner {
   import com.memoria.api.postUpload
   import com.memoria.api.getStatistics
 
