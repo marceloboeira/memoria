@@ -22,8 +22,8 @@ trait QueueCleaner extends BeforeAndAfterEach { this: Suite =>
 }
 
 class ServerTest extends FunSpec with Matchers with UploadsCleaner with QueueCleaner {
-  import com.memoria.Server.postUpload
-  import com.memoria.Server.getStatistics
+  import com.memoria.api.postUpload
+  import com.memoria.api.getStatistics
 
   def uploadInput(count: Int, secondsAgo: Int): Input = {
     Input.post("/upload")
