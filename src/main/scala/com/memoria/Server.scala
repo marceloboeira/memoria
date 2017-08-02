@@ -6,12 +6,12 @@ import com.twitter.util.Await
 import com.twitter.finagle.Http
 
 object Server extends App {
-  val cores = 2
-  val pool = Executors.newFixedThreadPool(cores)
+  val cacheRefreshInterval = 500
+  val pool = Executors.newFixedThreadPool(2)
 
   def startWorkers = {
     pool.submit(new QueueWorker(Queue.instance))
-    pool.submit(new CacheWorker(500))
+    pool.submit(new CacheWorker(cacheRefreshInterval))
   }
 
   def startServer = {
