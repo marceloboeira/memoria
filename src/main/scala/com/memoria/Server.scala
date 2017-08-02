@@ -27,6 +27,8 @@ object Uploads {
   def average: Double = synchronized { Try((sum / count).toDouble).toOption.getOrElse(0.0) }
   def refreshStatistics: Unit = synchronized { uploadStatistics = UploadStatistics(count, sum, min, max, average) }
   def statistics: UploadStatistics = synchronized { uploadStatistics }
+  def maxAge: Long = { Instant.now.getEpochSecond - 60 }
+  def removeOldEntries: Unit = synchronized {  memory --= memory.filter(_.timestamp < maxAge) }
 }
 
 object Server extends App {
@@ -46,6 +48,7 @@ object Server extends App {
       new Runnable {
         def run: Unit = {
           while (true) {
+            Uploads.removeOldEntries
             Uploads.refreshStatistics
             Thread.sleep(1000)
           }
