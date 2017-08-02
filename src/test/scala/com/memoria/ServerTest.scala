@@ -9,13 +9,19 @@ import org.scalatest._
 
 trait UploadsCleaner extends BeforeAndAfterEach { this: Suite =>
   override def beforeEach {
-    Cache.queue.clear
     Cache.destroyAll
     super.beforeEach
   }
 }
 
-class ServerTest extends FunSpec with Matchers with UploadsCleaner {
+trait QueueCleaner extends BeforeAndAfterEach { this: Suite =>
+  override def beforeEach {
+    Queue.instance.clear
+    super.beforeEach
+  }
+}
+
+class ServerTest extends FunSpec with Matchers with UploadsCleaner with QueueCleaner {
   import com.memoria.Server.postUpload
   import com.memoria.Server.getStatistics
 
@@ -46,7 +52,7 @@ class ServerTest extends FunSpec with Matchers with UploadsCleaner {
         it("enques the creation of the upload") {
           postUpload(uploadInput(1, 5)).awaitOutputUnsafe()
 
-          Cache.queue.size shouldBe 1
+          Queue.instance.size shouldBe 1
         }
       }
 
@@ -60,7 +66,7 @@ class ServerTest extends FunSpec with Matchers with UploadsCleaner {
         it("does not enqueue a new entry") {
           postUpload(uploadInput(1, 65)).awaitOutputUnsafe()
 
-          Cache.queue.size shouldBe 0
+          Queue.instance.size shouldBe 0
         }
       }
     }

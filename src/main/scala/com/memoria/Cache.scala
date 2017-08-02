@@ -1,13 +1,11 @@
 package com.memoria
 
 import java.time.Instant
-import java.util.concurrent.LinkedBlockingQueue
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Try
 
 object Cache {
-  val queue = new LinkedBlockingQueue[Upload]
   private[this] val memory: ArrayBuffer[Upload] = ArrayBuffer.empty[Upload]
   var uploadStatistics: UploadStatistics = UploadStatistics(0,0,0,0,0)
 

@@ -1,13 +1,14 @@
 package com.memoria.workers
 
-import java.util.concurrent.BlockingQueue
+import java.util.concurrent.ConcurrentLinkedQueue
+import com.memoria.{Cache, Upload}
 
-import com.memoria.{Upload, Cache}
-
-class QueueWorker(queue: BlockingQueue[Upload]) extends Runnable {
+class QueueWorker(queue: ConcurrentLinkedQueue[Upload]) extends Runnable {
   def run() {
     while (true) {
-      Cache.add(queue.take)
+      if (queue.size > 0) {
+        Cache.add(queue.poll)
+      }
     }
   }
 }

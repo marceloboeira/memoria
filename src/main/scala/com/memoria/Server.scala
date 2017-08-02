@@ -19,7 +19,7 @@ object Server extends App {
   def postUpload: Endpoint[Unit] = post("upload" :: jsonBody[Upload]) { upload: Upload =>
     Option(ageOf(upload.timestamp)).filter(_ <= 60) match {
       case Some(x) => {
-        Cache.queue.put(upload)
+        Queue.instance.add(upload)
         Output.unit(Status.Created)
       }
       case None => {
@@ -36,7 +36,7 @@ object Server extends App {
   private def now: Long = { Instant.now.getEpochSecond }
 
   def startWorkers = {
-    pool.submit(new QueueWorker(Cache.queue))
+    pool.submit(new QueueWorker(Queue.instance))
     pool.submit(new CacheWorker(500))
   }
 
