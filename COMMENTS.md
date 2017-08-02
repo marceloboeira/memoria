@@ -35,7 +35,7 @@ Problems:
 ### Future / Improvements
   * Fundamentals - I have enjoyed doing the challenge, I believe there are much better and more reliable options to solve it, and I am keen to continue experimenting with it. One thing that crossed my mind was to use Actors to isolate the memory and the enpoints would only send messages to the Actors, coupling the memory management with the actor, making it the absolute owner of the state. (sub-actors could work on making it concurrent enough if necessary).
 
-  * Abstractions - One thing that I still have to study is how to create good abstractions with Scala, unfortunally, Ruby does not have so many resources like Generics, Abstract Classes, Traits, Case Classes...  so probably I haven't taken advantage of Scala for that, and even misused some concepts.
+  * Abstractions - One thing that I still have to study is how to create good abstractions with Scala, unfortunally, Ruby does not have so many resources like Generics, Abstract Classes, Traits, Case Classes...  so probably I haven't taken advantage of Scala for that, and even misused some concepts. For example, I have used too many "objects", if everything was a class and them the App class instanciates every single class, it would make it easier to test (using dependency injection), as well as to configure the app, things like the `maxAge` of a upload, cache refresh interval, ...
 
   * Testing - Finally, one thing that I would like to improve is integration tests, to simulate real-world scenarios (concurrent access) and maybe even stress tests.
 
