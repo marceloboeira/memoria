@@ -16,7 +16,7 @@ object Cache {
   def count: Int = { memory.length }
   def sum: Int = { memory.map(_.count).sum }
   def average: Double = { Try((sum / count).toDouble).toOption.getOrElse(0.0) }
-  def refreshStatistics = { uploadStatistics = UploadStatistics(count, sum, min, max, average) }
+  def refreshStatistics = synchronized { uploadStatistics = UploadStatistics(count, sum, min, max, average) }
   def maxAge: Long = { Instant.now.getEpochSecond - 60 }
   def removeOldEntries: Unit = synchronized {  memory --= memory.filter(_.timestamp < maxAge) }
 }
