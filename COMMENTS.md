@@ -37,7 +37,7 @@ Problems:
 
   * Abstractions - One thing that I still have to study is how to create good abstractions with Scala, unfortunally, Ruby does not have so many resources like Generics, Abstract Classes, Traits, Case Classes...  so probably I haven't taken advantage of Scala for that, and even misused some concepts. For example, I have used too many "objects", if everything was a class and them the App class instanciates every single class, it would make it easier to test (using dependency injection), as well as to configure the app, things like the `maxAge` of a upload, cache refresh interval, ...
 
-  * Testing - Finally, one thing that I would like to improve is integration tests, to simulate real-world scenarios (concurrent access) and maybe even stress tests.
+  * Testing - Finally, one thing that I would like to improve is integration tests, to simulate real-world scenarios (concurrent access) and maybe even stress tests. Also, to have isolated unit tests with proper mocks, the abstract classes would come handy here.
 
 ### Funny thoughts
   * I have tried to implement something similar with Ruby, but considering the GIL of MRI, it has a terrible performance. It gets to a point that the aggregation thread can block the webserver.
