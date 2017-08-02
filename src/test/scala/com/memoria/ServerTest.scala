@@ -2,13 +2,13 @@ package com.memoria
 
 import java.time.Instant
 
-import com.memoria.suppport.{QueueCleaner, UploadsCleaner}
+import com.memoria.suppport.{QueueCleaner, CacheCleaner}
 import com.twitter.finagle.http.Status
 import io.finch.Error.NotParsed
 import io.finch.Input
 import org.scalatest._
 
-class ServerTest extends FunSpec with Matchers with UploadsCleaner with QueueCleaner {
+class ServerTest extends FunSpec with Matchers with CacheCleaner with QueueCleaner {
   import com.memoria.api.postUpload
   import com.memoria.api.getStatistics
 
