@@ -5,7 +5,7 @@ scalaVersion := "2.12.1"
 lazy val versions = new {
   val finch = "0.15.1"
   val circe = "0.8.0"
-  val scalaTest = "3.0.0"
+  val test = "3.0.0"
 }
 
 resolvers ++= Seq(
@@ -20,7 +20,8 @@ libraryDependencies ++= Seq(
   "com.github.finagle" %% "finch-generic" % versions.finch,
   "com.github.finagle" %% "finch-circe" % versions.finch,
 
-  "org.scalatest" %% "scalatest" % versions.scalaTest % "test"
+  "org.scalatest" %% "scalatest" % versions.test % "test"
+
 )
 
 enablePlugins(JavaAppPackaging)
