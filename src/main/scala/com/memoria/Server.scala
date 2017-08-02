@@ -5,18 +5,12 @@ import java.util.concurrent.{BlockingQueue, Executors, LinkedBlockingQueue}
 
 import com.memoria.workers.{CacheWorker, QueueWorker}
 
-import util.Try
 import com.twitter.util.Await
 import com.twitter.finagle.Http
 import com.twitter.finagle.http.Status
 import io.finch._
 import io.finch.circe._
 import io.circe.generic.auto._
-
-import scala.collection.mutable.ArrayBuffer
-
-case class Upload(count: Int, timestamp: Long)
-case class UploadStatistics(count: Int, sum: Int, min: Int, max: Int, avg: Double)
 
 object Server extends App {
   val cores = 2
