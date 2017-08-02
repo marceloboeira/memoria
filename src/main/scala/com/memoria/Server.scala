@@ -1,13 +1,14 @@
 package com.memoria
 
 import java.time.Instant
-import java.util.concurrent.{Executors, BlockingQueue, LinkedBlockingQueue}
-import util.Try
+import java.util.concurrent.{BlockingQueue, Executors, LinkedBlockingQueue}
 
+import com.memoria.workers.{CacheWorker, QueueWorker}
+
+import util.Try
 import com.twitter.util.Await
 import com.twitter.finagle.Http
 import com.twitter.finagle.http.Status
-
 import io.finch._
 import io.finch.circe._
 import io.circe.generic.auto._
@@ -32,24 +33,6 @@ object Uploads {
   def refreshStatistics = { uploadStatistics = UploadStatistics(count, sum, min, max, average) }
   def maxAge: Long = { Instant.now.getEpochSecond - 60 }
   def removeOldEntries: Unit = synchronized {  memory --= memory.filter(_.timestamp < maxAge) }
-}
-
-class QueueWorker(queue: BlockingQueue[Upload]) extends Runnable {
-  def run() {
-    while (true) {
-      Uploads.add(queue.take)
-    }
-  }
-}
-
-class CacheWorker(interval: Long) extends Runnable {
-  def run() {
-    while (true) {
-      Uploads.removeOldEntries
-      Uploads.refreshStatistics
-      Thread.sleep(interval)
-    }
-  }
 }
 
 object Server extends App {
